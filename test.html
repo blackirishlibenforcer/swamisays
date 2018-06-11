@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery.js"></script>
+</head>
+
+<body>
+    <h1>Add a swami question</h1>
+    <form>
+        <div class="form-group">
+            <label for="topic">Enter a Topic</label>
+            <input class="form-control" id="topic" type="text">
+        </div>
+        <div class="form-group">
+            <label for="topic">Enter answers</label>
+            <textarea class="form-control" id="answers"></textarea>
+        </div>
+        <input class="btn btn-primary" type="submit" id="submitToSwami">
+    </form>
+    <script src="https://www.gstatic.com/firebasejs/5.0.4/firebase.js"></script>
+    <script>
+        // Initialize Firebase
+        var config = {
+            apiKey: "AIzaSyAc7LRSzh0X6Q7TxuCmLNxjzZ3YapwJPUs",
+            authDomain: "swamisays-b7c23.firebaseapp.com",
+            databaseURL: "https://swamisays-b7c23.firebaseio.com",
+            projectId: "swamisays-b7c23",
+            storageBucket: "swamisays-b7c23.appspot.com",
+            messagingSenderId: "912053531087"
+        };
+        firebase.initializeApp(config);
+
+        var database = firebase.database();
+
+        //admin to add questions
+        $(document).ready(function(){
+            database.ref().child("room/swamiroom").on("value", function(snapshot){
+                console.log(snapshot.val());
+            })
+            $("#submitToSwami").click(function(event){
+                event.preventDefault();
+                
+                alert(window.location.pathname);       
+                //setting to your own key instead of generated
+                database.ref("/room").child("swamiRoomB").set({
+                    isOpen:false
+                })
+            });
+        })
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+
+    <style>
+        #wrapper {
+            width: 80%;
+            margin: 0 auto;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="modal" id="modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Welcome to Swami Says</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="room">Enter Your Credentials</label>
+                        <input class="form-control" placeholder="Enter Room Name" id="room" type="text">
+                        <input class="form-control" placeholder="Enter Password" id="password" type="password">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id='authorize' class="btn btn-primary">Authorize</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="wrapper">
+        <h1>Add a swami question</h1>
+        <form id="formquestion">
+            <div class="form-group">
+                <label for="topic">Enter a Topic</label>
+                <input class="form-control" id="topic" type="text">
+            </div>
+            <div class="form-group">
+                <label for="topic">Enter answers</label>
+                <textarea class="form-control" id="answers"></textarea>
+            </div>
+            <input class="btn btn-primary" type="submit" id="submitToSwami">
+        </form>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/date-fns/1.29.0/date_fns.js"></script>
+    <script>
+        console.log(dateFns.isToday(new Date()));
+        var todaysdate = dateFns.format(new Date(), 'MM/DD/YYYY');
+        console.log(todaysdate);
+
+        var thisdate = dateFns.format(new Date(), "MMMM Do YYYY ZZ");
+        console.log(thisdate);
+
+        var result = dateFns.getTime(new Date());
+        console.log(result);
+  //=> true
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/5.0.4/firebase.js"></script>
+    <script>
+        //shuffle a string
+        function shuffle(string) {
+            var parts = string.split('');
+            for (var i = parts.length; i > 0;) {
+                var random = parseInt(Math.random() * i);
+                var temp = parts[--i];
+                parts[i] = parts[random];
+                parts[random] = temp;
+            }
+            return parts.join('');
+        }
+
+        //get the parameter
+        function getParameterByName(name, url) {
+            if (!url) url = window.location.href;
+            name = name.replace(/[\[\]]/g, "\\$&");
+            var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, " "));
+        }
+        // Initialize Firebase
+        var letters = "abcdefghijklmanppqrstuvwxyz0123456789abcdefghijklmanppqrstuvwxyz0123456789abcdefghijklmanppqrstuvwxyz0123456789abcdefghijklmanppqrstuvwxyz0123456789abcdefghijklmanppqrstuvwxyz0123456789";
+
+        var config = {
+            apiKey: "AIzaSyAc7LRSzh0X6Q7TxuCmLNxjzZ3YapwJPUs",
+            authDomain: "swamisays-b7c23.firebaseapp.com",
+            databaseURL: "https://swamisays-b7c23.firebaseio.com",
+            projectId: "swamisays-b7c23",
+            storageBucket: "swamisays-b7c23.appspot.com",
+            messagingSenderId: "912053531087"
+        };
+        firebase.initializeApp(config);
+
+        var database = firebase.database();
+
+        //admin to add questions
+        $(document).ready(function () {
+            //hides the form
+            $("#wrapper").hide();
+            $("#modal").modal("show");
+
+            //first check for a room in the query + if it exists
+            //check for sessionStorage is equal to sessionID
+            if (getParameterByName("room") != null && sessionStorage != null) {
+                database.ref("/room").once("value", function (snapshot) {
+                    if (snapshot.hasChild(getParameterByName("room"))) {
+                        database.ref("/room/" + getParameterByName("room")).once("value", function (snap) {
+                            if (snap.val().sessionID == sessionStorage.getItem("sessionID")) {
+                                $("#wrapper").css("display", "block");
+                                $("#modal").modal("hide");
+                            }
+                        });
+                    }
+                });
+            }
+
+            $("#authorize").click(function () {
+                var room = $("#room").val().trim();
+                var pass = $("#password").val().trim();
+
+                //check existance of room
+                database.ref("/room").once('value', function (snapshot) {
+                    if (snapshot.hasChild(room)) {
+                        database.ref("/room/" + room).once("value").then(function (snap) {
+                            if (pass == snap.val().password) {
+                                $("#wrapper").css("display", "block");
+                                var sessionID = shuffle(letters).substring(0, 10);
+                                sessionStorage.setItem("sessionID", sessionID);
+                                database.ref("/room/" + room).update({ sessionID: sessionID });
+                                $("#modal").modal("hide");
+                                window.location.href = window.location.href + "?room=" + room;
+
+                            } else {
+                                alert("you shall not pass");
+                            }
+                        })
+                    } else {
+                        alert('no existant');
+                    }
+                })
+            });
+
+            $("#submitToSwami").click(function (event) {
+                event.preventDefault();
+
+                //data to be pushed to the database
+                var topic = $("#topic").val();
+                var answer = [];
+
+                var answers = $('#answers').val();
+                answers = answers.replace(/\n/g, "\\n");
+                answers = answers.split("\\n");
+                for (var i = 0; i < answers.length; i++) {
+                    if (answers[i] != "") {
+                        answer.push(answers[i].trim());
+                    }
+                }
+
+                database.ref("/room/"+getParameterByName("room")+"/questions").push({
+                    topic:topic,
+                    answers:answer
+                });
+
+                $("#formquestion")[0].reset();
+            });
+        })
+    </script>
+</body>
+
+</html>
