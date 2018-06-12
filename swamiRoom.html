@@ -6,15 +6,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
 </head>
 
 <body>
     <p id="demo"></p>
+    <script src="https://www.gstatic.com/firebasejs/5.0.4/firebase.js"></script>
 
     <script>
+        var config = {
+            apiKey: "AIzaSyAc7LRSzh0X6Q7TxuCmLNxjzZ3YapwJPUs",
+            authDomain: "swamisays-b7c23.firebaseapp.com",
+            databaseURL: "https://swamisays-b7c23.firebaseio.com",
+            projectId: "swamisays-b7c23",
+            storageBucket: "swamisays-b7c23.appspot.com",
+            messagingSenderId: "912053531087"
+        };
+
+        firebase.initializeApp(config);
+
+        var database = firebase.database();
+
         var win = window.location.pathname.split(/[\/\.]+/);
         document.getElementById("demo").innerHTML =
-            "Page path is: " + win[win.length-2];
+            "Page path is: " + win[win.length - 2];
+
+        $(document).ready(function () {
+            database.ref("/room/"+win[win.length - 2]).on("value", function(snapshot){
+                if (snapshot.val().isOpen){
+                    $("#demo").text("OPEN");
+                } else {
+                    $("#demo").text("closed");
+                }
+            })
+        })
     </script>
 </body>
 
