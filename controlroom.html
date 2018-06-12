@@ -17,6 +17,71 @@
             margin: 0 auto;
             display: none;
         }
+
+        /* The switch - the box around the slider */
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+
+        .switch input {
+            display: none;
+        }
+
+        /* The slider */
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+        }
+
+        input:checked+.slider {
+            background-color: #2196F3;
+        }
+
+        input:focus+.slider {
+            box-shadow: 0 0 1px #2196F3;
+        }
+
+        input:checked+.slider:before {
+            -webkit-transform: translateX(26px);
+            -ms-transform: translateX(26px);
+            transform: translateX(26px);
+        }
+
+        /* Rounded sliders */
+
+        .slider.round {
+            border-radius: 34px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
     </style>
 </head>
 
@@ -43,13 +108,20 @@
             </div>
         </div>
     </div>
+
     <div id="wrapper">
-        <h1>Control Room for <span id='roomname'></span></h1>
+        <h1>Control Room for
+            <span id='roomname'></span>
+        </h1>
         <form id="formquestion">
             <div class="form-group">
                 <label for="topic">Enter a Topic</label>
                 <input class="form-control" id="topic" type="text">
             </div>
+            <label class="switch">
+                <input type="checkbox" id='openclosed'>
+                <span class="slider round"></span>
+            </label>
             <div class="form-group">
                 <label for="topic">Enter answers</label>
                 <textarea class="form-control" id="answers"></textarea>
@@ -95,7 +167,7 @@
             return decodeURIComponent(results[2].replace(/\+/g, " "));
         }
         // Initialize Firebase
-        var letters = "abcd+++++++++efghijklmanppqrstuvwxyz0123456789abcdefghijklmanppqrstuvwxyz0123456789abcdefghijklmanppqrstuvwxyz0123456789abcdefghijklmanppqrstuvwxyz0123456789abcdefghijklmanppqrstuvwxyz0123456789";
+        var letters = "abcdefghijklmanppqrstuvwxyz0123456789abcdefghijklmanppqrstuvwxyz0123456789abcdefghijklmanppqrstuvwxyz0123456789abcdefghijklmanppqrstuvwxyz0123456789abcdefghijklmanppqrstuvwxyz0123456789";
 
         var config = {
             apiKey: "AIzaSyAc7LRSzh0X6Q7TxuCmLNxjzZ3YapwJPUs",
@@ -124,6 +196,7 @@
                             if (snap.val().sessionID == sessionStorage.getItem("sessionID")) {
                                 $("#wrapper").css("display", "block");
                                 $("#modal").modal("hide");
+                                $("#roomname").text(getParameterByName("room"));
                             }
                         });
                     }
@@ -145,6 +218,7 @@
                                 database.ref("/room/" + room).update({ sessionID: sessionID });
                                 $("#modal").modal("hide");
                                 window.location.href = window.location.href + "?room=" + room;
+                                $("#roomname").text(getParameterByName("room"));
 
                             } else {
                                 alert("you shall not pass");
@@ -179,6 +253,22 @@
 
                 $("#formquestion")[0].reset();
             });
+            
+            //check if room is open
+            //if open, registration stil opens
+            //if closed, registration is closed
+            
+            $("#openclosed").change(function(){
+                if (this.checked){
+                    database.ref("/room/" + getParameterByName("room")).update({
+                        isOpen:true
+                    });
+                } else {
+                    database.ref("/room/" + getParameterByName("room")).update({
+                        isOpen:false
+                    });
+                }
+            })
         })
     </script>
 </body>
