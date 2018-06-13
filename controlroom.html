@@ -114,17 +114,17 @@
             <span id='roomname'></span>
         </h1>
         <form id="formquestion">
-            <div class="form-group">
-                <label for="topic">Enter a Topic</label>
-                <input class="form-control" id="topic" type="text">
-            </div>
+            <p>Open or Closed Room</p>
             <label class="switch">
                 <input type="checkbox" id='openclosed'>
                 <span class="slider round"></span>
             </label>
-            <div class="form-group">
-                <label for="topic">Enter answers</label>
-                <textarea class="form-control" id="answers"></textarea>
+            <br>
+            <button id="startProgress" class="btn btn-primary" disabled>Press to start Room</button>
+            <br>
+            <h1>Questions</h1><button id='fire' class='btn btn-danger'>Fire question <span>0</span></button>
+            <div id="questionholder">
+
             </div>
             <input class="btn btn-primary" type="submit" id="submitToSwami">
         </form>
@@ -177,6 +177,7 @@
             storageBucket: "swamisays-b7c23.appspot.com",
             messagingSenderId: "912053531087"
         };
+
         firebase.initializeApp(config);
 
         var database = firebase.database();
@@ -253,23 +254,62 @@
 
                 $("#formquestion")[0].reset();
             });
-            
+
             //check if room is open
             //if open, registration stil opens
             //if closed, registration is closed
-            
-            $("#openclosed").change(function(){
-                if (this.checked){
+
+            $("#openclosed").change(function () {
+                if (this.checked) {
                     database.ref("/room/" + getParameterByName("room")).update({
-                        isOpen:true
+                        isOpen: true
                     });
+                    $("#startProgress").prop("disabled", true);
                 } else {
                     database.ref("/room/" + getParameterByName("room")).update({
-                        isOpen:false
+                        isOpen: false
                     });
+                    $("#startProgress").prop("disabled", false);
                 }
-            })
-        })
+            });
+
+            $("#startProgress").click(function (event) {
+                event.preventDefault();
+                $("#openclosed").prop("disabled", true);
+
+                database.ref("/room/" + getParameterByName("room")).update({
+                    inProgress: true
+                });
+                
+                $(this).prop("disabled", true);
+                //we have closed the room and it is in progress
+
+                database.ref("/room/"+ getParameterByName("room") + "/questions").on("child_added", function(childsnapshot){
+                    console.log(childsnapshot.val());
+
+                    var question = $("<div>");
+                    question.append("<div class='alert alert-success'>Think of "+childsnapshot.val().topic+"</div>");
+                    var lists = $("<div class='list-group'>");
+
+                    for (var i=0; i<childsnapshot.val().answers.length; i++){
+                        lists.append('<a href="#" class="list-group-item list-group-item-action">'+childsnapshot.val().answers[i]+'</a>');
+                    }
+
+                    question.append(lists);
+                    $("#questionholder").append(question);
+                });
+            });
+
+            //shuffle questions
+            $("#fire").click(function (event) {
+                event.preventDefault();
+
+                //get question
+                database.ref("/room/" + getParameterByName("room")).update({
+                    questionFired: true
+                });
+            });
+        });
     </script>
 </body>
 

@@ -14,6 +14,7 @@
 
 <body>
     <p id="demo"></p>
+    <p id="question"></p>
     <script src="https://www.gstatic.com/firebasejs/5.0.4/firebase.js"></script>
 
     <script>
@@ -33,15 +34,30 @@
         var win = window.location.pathname.split(/[\/\.]+/);
         document.getElementById("demo").innerHTML =
             "Page path is: " + win[win.length - 2];
-
+        
+        //function works, but
+        //if room is opem
+            //check for registration
+            //if not modal for registration pops up
+            //if yes their name is up and they need to wait for further instructions
+            
         $(document).ready(function () {
             database.ref("/room/"+win[win.length - 2]).on("value", function(snapshot){
-                if (snapshot.val().isOpen){
+
+                var isRoomOpen = snapshot.val().isOpen;
+                var isInProgress = snapshot.val().inProgress;
+                var isFired = snapshot.val().questionFired;
+
+                if (isRoomOpen){
                     $("#demo").text("OPEN");
-                } else {
-                    $("#demo").text("closed");
+                } else if (!isRoomOpen && !isInProgress){
+                    $("#demo").text("closed, standby");
+                } else if (!isRoomOpen && isInProgress && !questionFired){
+                    $("#demo").text("Standby for Question");
+                } else if (!isRoomOpen && isInProgress && questionFired){
+                    $("#demo").text("prepare for questioning");
                 }
-            })
+            });
         })
     </script>
 </body>
