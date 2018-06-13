@@ -52,9 +52,9 @@
                     $("#demo").text("OPEN");
                 } else if (!isRoomOpen && !isInProgress){
                     $("#demo").text("closed, standby");
-                } else if (!isRoomOpen && isInProgress && !questionFired){
+                } else if (!isRoomOpen && isInProgress && !isFired){
                     $("#demo").text("Standby for Question");
-                } else if (!isRoomOpen && isInProgress && questionFired){
+                } else if (!isRoomOpen && isInProgress && isFired){
                     $("#demo").text("prepare for questioning");
                 }
             });
