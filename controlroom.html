@@ -327,7 +327,7 @@
                 event.preventDefault();
                 $("#fire").prop("disabled", true);
                 $("#revealanswer").prop("disabled", false);
-                $("nextquestion").prop("disabled", true);
+                $("#nextquestion").prop("disabled", true);
 
                 //get question
                 database.ref("/room/" + getParameterByName("room")).update({
@@ -349,7 +349,7 @@
                 event.preventDefault();
                 $("#fire").prop("disabled", true);
                 $("#revealanswer").prop("disabled", true);
-                $("nextquestion").prop("disabled", false);
+                $("#nextquestion").prop("disabled", false);
                 database.ref("/room/" + getParameterByName("room") + "/currentQuestion").update({
                     reveal: true
                 });
@@ -359,7 +359,7 @@
                 event.preventDefault();
                 $("#fire").prop("disabled", false);
                 $("#revealanswer").prop("disabled", true);
-                $("nextquestion").prop("disabled", true);
+                $("#nextquestion").prop("disabled", true);
                 questionnumber++;
                 database.ref("/room/" + getParameterByName("room")).update({
                     questionFired: false,
