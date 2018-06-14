@@ -332,7 +332,8 @@
                 });
             });
 
-            $("#questionholder").on("click", ".list-group-item", function () {
+            $("#questionholder").on("click", ".list-group-item", function (event) {
+                event.preventDefault();
                 $(".list-group-item").removeClass("active");
                 $(this).addClass("active");
 
@@ -350,9 +351,10 @@
 
             $("#nextquestion").click(function (event) {
                 event.preventDefault();
+                questionnumber++;
                 database.ref("/room/" + getParameterByName("room")).update({
                     questionFired: false,
-                    questionNumber: questionnumber++,
+                    questionNumber: questionnumber,
                     currentQuestion: { reveal: false, solution: 0, topic: $('div#questionholder div:nth-child(2) div.alert').text() }
                 });
                 setTimeout(function () { $('div#questionholder div.holding:first-child').remove(); }, 1000)
