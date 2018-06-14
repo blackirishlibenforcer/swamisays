@@ -122,7 +122,12 @@
             <br>
             <button id="startProgress" class="btn btn-primary" disabled>Press to start Room</button>
             <br>
-            <h1>Questions</h1><button id='fire' class='btn btn-danger'>Fire question <span>0</span></button>
+            <h1>Questions</h1>
+            <button id='fire' class='btn btn-danger'>Fire question
+                <span></span>
+            </button>
+            <button id='revealanswer' class="btn btn-danger">Reveal Answer</button>
+            <button id='nextquestion' class="btn btn-danger">Next Question</button>
             <div id="questionholder">
 
             </div>
@@ -262,12 +267,14 @@
             $("#openclosed").change(function () {
                 if (this.checked) {
                     database.ref("/room/" + getParameterByName("room")).update({
-                        isOpen: true
+                        isOpen: true,
+                        inProgress: false
                     });
                     $("#startProgress").prop("disabled", true);
                 } else {
                     database.ref("/room/" + getParameterByName("room")).update({
-                        isOpen: false
+                        isOpen: false,
+                        inProgress: false
                     });
                     $("#startProgress").prop("disabled", false);
                 }
@@ -278,27 +285,37 @@
                 $("#openclosed").prop("disabled", true);
 
                 database.ref("/room/" + getParameterByName("room")).update({
-                    inProgress: true
+                    inProgress: true,
+                    questionFired: false
                 });
-                
+
                 $(this).prop("disabled", true);
                 //we have closed the room and it is in progress
 
-                database.ref("/room/"+ getParameterByName("room") + "/questions").on("child_added", function(childsnapshot){
+                database.ref("/room/" + getParameterByName("room") + "/questions").on("child_added", function (childsnapshot) {
                     console.log(childsnapshot.val());
 
-                    var question = $("<div>");
-                    question.append("<div class='alert alert-success'>Think of "+childsnapshot.val().topic+"</div>");
+                    var question = $("<div class='holding'>");
+                    question.append("<div class='alert alert-success'>Think of " + childsnapshot.val().topic + "</div>");
                     var lists = $("<div class='list-group'>");
 
-                    for (var i=0; i<childsnapshot.val().answers.length; i++){
-                        lists.append('<a href="#" class="list-group-item list-group-item-action">'+childsnapshot.val().answers[i]+'</a>');
+                    for (var i = 0; i < childsnapshot.val().answers.length; i++) {
+                        lists.append('<button class="list-group-item list-group-item-action" datapoint=' + i + '>' + childsnapshot.val().answers[i] + '</button>');
                     }
 
                     question.append(lists);
                     $("#questionholder").append(question);
                 });
+
+                setTimeout(getQuestion, 1000);
             });
+
+            function getQuestion() {
+                var q = $('div#questionholder div:first-child div.alert').text();
+                database.ref("/room/" + getParameterByName("room") + "/currentQuestion").update({
+                    topic: q
+                });
+            }
 
             //shuffle questions
             $("#fire").click(function (event) {
@@ -308,6 +325,30 @@
                 database.ref("/room/" + getParameterByName("room")).update({
                     questionFired: true
                 });
+            });
+
+            $("#questionholder").on("click", ".list-group-item", function () {
+                $(".list-group-item").removeClass("active");
+                $(this).addClass("active");
+
+                database.ref("/room/" + getParameterByName("room") + "/currentQuestion").update({
+                    solution: parseInt($(this).attr("datapoint"))
+                });
+            });
+
+            $("#revealanswer").click(function () {
+                database.ref("/room/" + getParameterByName("room") + "/currentQuestion").update({
+                    reveal: true
+                });
+            });
+
+            $("#nextquestion").click(function () {
+                database.ref("/room/" + getParameterByName("room")).update({
+                    questionFired: false,
+                    questionNumber: questionNumber++,
+                    currentQuestion: { reveal: false, solution: 0, topic: $('div#questionholder div:nth-child(2) div.alert').text() }
+                });
+                setTimeout(function () { $('div#questionholder div.holding:first-child').remove(); }, 1000)
             });
         });
     </script>

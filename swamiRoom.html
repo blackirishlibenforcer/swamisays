@@ -13,8 +13,47 @@
 </head>
 
 <body>
-    <p id="demo"></p>
-    <p id="question"></p>
+    <div class="alert alert-primary" role="alert">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3">
+                    Username:
+                    <span></span>
+                </div>
+                <div class="col-md-6" id='demo'>
+                    jklgjdl
+                </div>
+                <div class="col-md-3">
+                    <div class='row'>
+                        <div class="col-md-3">0</div>
+                        <div class="col-md-3">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class='container'>
+        <div class='row'>
+            <div class="col-md-1"></div>
+            <div class="col-md-10">
+                <div class="card">
+                    <div class="card-header" id="questionheader"></div>
+                    <div class="card-body">
+                        <div id='anotherone'></div>
+                        <button class="btn btn-block btn-primary" id='ihaveathought'>I have thought of something!</button>
+                    </div>
+                    <div class="card-footer">
+                        <div class='form-group'>
+                            <input class="form-control" id="answer" type='text' disabled>
+                        </div>
+                        <button class="btn-block btn-info" id='answerbtn' disabled>Submit Guess</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-1"></div>
+        </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/5.0.4/firebase.js"></script>
 
     <script>
@@ -32,32 +71,100 @@
         var database = firebase.database();
 
         var win = window.location.pathname.split(/[\/\.]+/);
-        document.getElementById("demo").innerHTML =
-            "Page path is: " + win[win.length - 2];
-        
+
         //function works, but
         //if room is opem
-            //check for registration
-            //if not modal for registration pops up
-            //if yes their name is up and they need to wait for further instructions
-            
+        //check for registration
+        //if not modal for registration pops up
+        //if yes their name is up and they need to wait for further instructions
+
         $(document).ready(function () {
-            database.ref("/room/"+win[win.length - 2]).on("value", function(snapshot){
+            $("#ihaveathought").hide();
+            var clicks = 0;
+
+            database.ref("/room/" + win[win.length - 2]).on("value", function (snapshot) {
 
                 var isRoomOpen = snapshot.val().isOpen;
                 var isInProgress = snapshot.val().inProgress;
                 var isFired = snapshot.val().questionFired;
+                var reveal = snapshot.val().currentQuestion.reveal;
+                var questionNumber = snapshot.val().questionNumber;
+                var solution = snapshot.val().currentQuestion.solution;
 
-                if (isRoomOpen){
+                if (isRoomOpen) {
                     $("#demo").text("OPEN");
-                } else if (!isRoomOpen && !isInProgress){
+                    $("#questionheader").text("");
+                } else if (!isRoomOpen && !isInProgress) {
                     $("#demo").text("closed, standby");
-                } else if (!isRoomOpen && isInProgress && !isFired){
+                    $("#questionheader").text("");
+                } else if (!isRoomOpen && isInProgress && !isFired) {
                     $("#demo").text("Standby for Question");
-                } else if (!isRoomOpen && isInProgress && isFired){
-                    $("#demo").text("prepare for questioning");
+                    $("#questionheader").text("");
+                    $('#anotherone').empty();
+                    $('#answer').val("");
+                } else if (!isRoomOpen && isInProgress && isFired && !reveal) {
+                    $("#demo").text("Question is Below");
+                    database.ref("/room/" + win[win.length - 2] + "/currentQuestion").once("value", function (snap) {
+                        $("#questionheader").text(snap.val().topic);
+                        clicks = snap.val().solution;
+                    });
+                    $("#ihaveathought").hide();
+                    setTimeout(function () { $("#ihaveathought").show() }, 3000);
+                } else if (!isRoomOpen && isInProgress && isFired && reveal) {
+                    $("#anotherone").empty();
+                    $("#anotherone").append("<div class='alert alert-primary' role='alert'>The Answer that we are looking for is...</div>");
+                    var obj = "";
+                    var count = 0
+                    database.ref("/room/" + win[win.length - 2] + "/questions").on("child_added", function (snaps) {
+
+                        if (count == questionNumber) {
+                            obj = snaps.val().answers[solution];
+                        }
+                        count++;
+                    });
+
+                    setTimeout(function(){$("#anotherone").append("<div class='alert alert-primary' role='alert'>"+obj+"</div>");count = 0;},3000)
+
                 }
             });
+
+            //conections
+            var connectionsRef = database.ref("/room/" + win[win.length - 2] + "/connections");
+            var connectedRef = database.ref(".info/connected");
+            connectedRef.on("value", function (snapper) {
+                if (snapper.val()) {
+                    var con = connectionsRef.push(true);
+                    con.onDisconnect().remove();
+                }
+            })
+
+            $("#ihaveathought").click(function () {
+                $(this).hide();
+                if (clicks > 0) {
+                    $("#anotherone").append("<div>Now think of another one.</div>");
+                    playQuestion();
+                    clicks--;
+                } else {
+                    $("#anotherone").append("<div>What is it?</div>");
+                    $("#answer").prop("disabled", false);
+                    $("#answerbtn").prop("disabled", false);
+                    $("#ihaveathought").hide();
+                }
+
+            });
+
+            $("#answerbtn").click(function () {
+                $("#answer").prop("disabled", true);
+                $("#answerbtn").prop("disabled", true);
+            });
+
+
+
+            function playQuestion() {
+                $("#ihaveathought").hide();
+                setTimeout(function () { $("#ihaveathought").show() }, 3000);
+            }
+
         })
     </script>
 </body>
