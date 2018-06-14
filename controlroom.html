@@ -336,13 +336,15 @@
                 });
             });
 
-            $("#revealanswer").click(function () {
+            $("#revealanswer").click(function (event) {
+                event.preventDefault();
                 database.ref("/room/" + getParameterByName("room") + "/currentQuestion").update({
                     reveal: true
                 });
             });
 
-            $("#nextquestion").click(function () {
+            $("#nextquestion").click(function (event) {
+                event.preventDefault();
                 database.ref("/room/" + getParameterByName("room")).update({
                     questionFired: false,
                     questionNumber: questionNumber++,
