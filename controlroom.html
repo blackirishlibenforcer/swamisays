@@ -192,6 +192,7 @@
             //hides the form
             $("#wrapper").hide();
             $("#modal").modal("show");
+            var questionnumber = 0;
 
             //first check for a room in the query + if it exists
             //check for sessionStorage is equal to sessionID
@@ -290,6 +291,10 @@
                 });
 
                 $(this).prop("disabled", true);
+
+                database.ref("/room" + getParameterByName("room")).once("value", function(s){
+                    questionnumber = s.val().questionNumber;
+                });
                 //we have closed the room and it is in progress
 
                 database.ref("/room/" + getParameterByName("room") + "/questions").on("child_added", function (childsnapshot) {
@@ -347,7 +352,7 @@
                 event.preventDefault();
                 database.ref("/room/" + getParameterByName("room")).update({
                     questionFired: false,
-                    questionNumber: questionNumber++,
+                    questionNumber: questionnumber++,
                     currentQuestion: { reveal: false, solution: 0, topic: $('div#questionholder div:nth-child(2) div.alert').text() }
                 });
                 setTimeout(function () { $('div#questionholder div.holding:first-child').remove(); }, 1000)
